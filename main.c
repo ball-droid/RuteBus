@@ -65,10 +65,8 @@ int main() {
                     simpan_data(FILE_DATA);
                 } else if (hasil == 0) {
                     printf("ERROR: Halte '%s' sudah ada di %s!\n", nama_halte, corridors[koridor_pilih].name);
-                } else if (hasil == -1) {
-                    printf("ERROR: Koridor tidak valid!\n");
-                } else if (hasil == -2) {
-                    printf("ERROR: %s sudah penuh! Maksimal %d halte.\n", corridors[koridor_pilih].name, MAX_STOPS_PER_CORRIDOR);
+                } else {
+                    printf("ERROR: Gagal menambah halte ke %s.\n", corridors[koridor_pilih].name);
                 }
                 break;
 

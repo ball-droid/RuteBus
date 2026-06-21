@@ -1,0 +1,36 @@
+# BST Preorder Traversal
+1|masjid nurul iman|0
+    0|RTH Imam Bonjol Padang|0
+        #
+        #
+    2|SBPU Anak Air|0
+        #
+        3|Simpang Koto Tuo|0
+            #
+            4|Simpang Aia Pacah Permai|0
+                #
+                5|Simpang Maransi|0
+                    #
+                    6|FKG Baiturrahmah|0
+                        #
+                        7|Universitas Terbuka|0
+                            #
+                            8|SPBU Taruko|0
+                                #
+                                9|Kantor Camat Kuranji|0
+                                    #
+                                    10|Simpang Kalumbuk|0
+                                        #
+                                        11|Polsek/ Pukesmas Kuranji|0
+                                            #
+                                            12|Utama Furniture|0
+                                                #
+                                                13|Masjid Jamiatul Huda|0
+                                                    #
+                                                    14|RS Semen Padang Hospital|0
+                                                        #
+                                                        15|Poliklinik Fitria|0
+                                                            #
+                                                            16|Pool ALS|0
+                                                                #
+                                                                #

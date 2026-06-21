@@ -7,14 +7,13 @@
 #include <stdlib.h>
 #include "BinSTree.h"
 
-#define MAX_STOPS_PER_CORRIDOR 25
 #define MAX_CORRIDORS 10
-#define MAX_KARAKTER 100
 
 typedef struct{
     char name[50];
-    char* halte[MAX_STOPS_PER_CORRIDOR];
+    char** halte;      /* Dynamic array of string pointers */
     int jumlah_halte;
+    int kapasitas;     /* Allocated capacity */
 } Corridor;
 
 extern Corridor corridors[MAX_CORRIDORS];

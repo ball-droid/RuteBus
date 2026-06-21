@@ -121,3 +121,81 @@ void printTree(TreeNode* root, int level)
     printTree(root->leftChild, level + 1);
     printTree(root->rightChild, level + 1);
 }
+
+/* ===== SERIALISASI TREE ===== */
+
+static void tulis_node(FILE *fp, TreeNode *node, int depth) {
+    if (node == NULL) {
+        for (int i = 0; i < depth; i++) fprintf(fp, "    ");
+        fprintf(fp, "#\n");
+        return;
+    }
+    for (int i = 0; i < depth; i++) fprintf(fp, "    ");
+    fprintf(fp, "%d|%s|%d\n", node->id, node->name, node->jalur);
+    tulis_node(fp, node->leftChild, depth + 1);
+    tulis_node(fp, node->rightChild, depth + 1);
+}
+
+void simpan_tree(const char *filename, TreeNode *root) {
+    FILE *fp = fopen(filename, "w");
+    if (!fp) {
+        printf("Gagal menyimpan tree ke '%s'\n", filename);
+        return;
+    }
+    fprintf(fp, "# BST Preorder Traversal\n");
+    tulis_node(fp, root, 0);
+    fclose(fp);
+    printf("Tree berhasil disimpan ke '%s'\n", filename);
+}
+
+static TreeNode* baca_node(FILE *fp) {
+    char buf[256];
+    if (!fgets(buf, sizeof(buf), fp)) return NULL;
+
+    size_t len = strlen(buf);
+    if (len > 0 && buf[len - 1] == '\n') buf[len - 1] = '\0';
+    if (strlen(buf) == 0) return NULL;
+
+    /* Skip comment lines */
+    if (buf[0] == '#') return baca_node(fp);
+
+    /* NULL marker */
+    if (buf[0] == '#' && strlen(buf) == 1) return NULL;
+
+    /* Skip leading whitespace (indentation) */
+    char *p = buf;
+    while (*p == ' ' || *p == '\t') p++;
+
+    /* Parse "id|name|jalur" */
+    char *token_id = strtok(p, "|");
+    char *token_name = strtok(NULL, "|");
+    char *token_jalur = strtok(NULL, "|");
+
+    if (!token_id || !token_name || !token_jalur) return NULL;
+
+    int id = atoi(token_id);
+    int jalur = atoi(token_jalur);
+
+    TreeNode *node = createNode(id, token_name, jalur);
+    node->leftChild = baca_node(fp);
+    if (node->leftChild) node->leftChild->parent = node;
+    node->rightChild = baca_node(fp);
+    if (node->rightChild) node->rightChild->parent = node;
+
+    return node;
+}
+
+TreeNode* muat_tree(const char *filename) {
+    FILE *fp = fopen(filename, "r");
+    if (!fp) {
+        printf("Gagal membuka '%s'\n", filename);
+        return NULL;
+    }
+    TreeNode *root = baca_node(fp);
+    fclose(fp);
+    if (root)
+        printf("Tree berhasil dimuat dari '%s'\n", filename);
+    else
+        printf("Gagal memuat tree dari '%s'\n", filename);
+    return root;
+}

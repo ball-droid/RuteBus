@@ -1,5 +1,6 @@
 #include <strings.h>
 #include "connection.h"
+#define FILE_TREE "data/tree.txt"
 
 Corridor corridors[MAX_CORRIDORS];
 int jumlah_koridor;
@@ -7,6 +8,14 @@ int jumlah_koridor;
 /* Forward declarations */
 int find_stop(char *name, int *kor, int *idx);
 int cari_iris(int kor_cabang, int *main_idx, int *cabang_idx);
+
+static void pastikan_kapasitas(Corridor *cor, int butuh) {
+    if (butuh <= cor->kapasitas) return;
+    int baru = cor->kapasitas == 0 ? 4 : cor->kapasitas;
+    while (baru < butuh) baru *= 2;
+    cor->halte = realloc(cor->halte, baru * sizeof(char*));
+    cor->kapasitas = baru;
+}
 
 /* ===== LOAD DATA DARI FILE ===== */
 /* Format file:
@@ -44,10 +53,12 @@ void load_data(const char *filename) {
             if (kor >= MAX_CORRIDORS) break;
             strcpy(corridors[kor].name, buf + 1);
             corridors[kor].jumlah_halte = 0;
+            corridors[kor].halte = NULL;
+            corridors[kor].kapasitas = 0;
             idx = 0;
-        } else if (kor >= 0 && kor < MAX_CORRIDORS && idx < MAX_STOPS_PER_CORRIDOR) {
-            corridors[kor].halte[idx] = malloc(strlen(buf) + 1);
-            strcpy(corridors[kor].halte[idx], buf);
+        } else if (kor >= 0 && kor < MAX_CORRIDORS) {
+            pastikan_kapasitas(&corridors[kor], idx + 1);
+            corridors[kor].halte[idx] = strdup(buf);
             idx++;
             corridors[kor].jumlah_halte = idx;
         }
@@ -118,65 +129,71 @@ void validasi_data() {
 void init_bus_data() {
     int kor = 0;
     strcpy(corridors[kor].name, "Koridor I");
-    corridors[kor].halte[0] = "Pool Damri";
-    corridors[kor].halte[1] = "RTH Imam Bonjol Padang";
-    corridors[kor].halte[2] = "GOR H Agus Salim";
-    corridors[kor].halte[3] = "Masjid Raya Sumatera Barat";
-    corridors[kor].halte[4] = "DPRD Provinsi Sumatera Barat";
-    corridors[kor].halte[5] = "Basko Grand Mall";
-    corridors[kor].halte[6] = "Simpang Labor";
-    corridors[kor].halte[7] = "Universitas Negeri Padang Air Tawar";
-    corridors[kor].halte[8] = "Simpang Tunggul Hitam";
-    corridors[kor].halte[9] = "Simpang GIA";
-    corridors[kor].halte[10] = "Asrama Haji Padang";
-    corridors[kor].halte[11] = "Perumahan Monang Indah";
-    corridors[kor].halte[12] = "SMP Negeri 15 Padang";
-    corridors[kor].halte[13] = "Fakultas Kedokteran Universitas Negeri Padang";
-    corridors[kor].halte[14] = "Kayu Kalek";
-    corridors[kor].halte[15] = "Kompleks Mega Permai";
-    corridors[kor].halte[16] = "Terminal Anak Air";
+    corridors[kor].kapasitas = 17;
+    corridors[kor].halte = malloc(17 * sizeof(char*));
+    corridors[kor].halte[0] = strdup("Pool Damri");
+    corridors[kor].halte[1] = strdup("RTH Imam Bonjol Padang");
+    corridors[kor].halte[2] = strdup("GOR H Agus Salim");
+    corridors[kor].halte[3] = strdup("Masjid Raya Sumatera Barat");
+    corridors[kor].halte[4] = strdup("DPRD Provinsi Sumatera Barat");
+    corridors[kor].halte[5] = strdup("Basko Grand Mall");
+    corridors[kor].halte[6] = strdup("Simpang Labor");
+    corridors[kor].halte[7] = strdup("Universitas Negeri Padang Air Tawar");
+    corridors[kor].halte[8] = strdup("Simpang Tunggul Hitam");
+    corridors[kor].halte[9] = strdup("Simpang GIA");
+    corridors[kor].halte[10] = strdup("Asrama Haji Padang");
+    corridors[kor].halte[11] = strdup("Perumahan Monang Indah");
+    corridors[kor].halte[12] = strdup("SMP Negeri 15 Padang");
+    corridors[kor].halte[13] = strdup("Fakultas Kedokteran Universitas Negeri Padang");
+    corridors[kor].halte[14] = strdup("Kayu Kalek");
+    corridors[kor].halte[15] = strdup("Kompleks Mega Permai");
+    corridors[kor].halte[16] = strdup("Terminal Anak Air");
     corridors[kor].jumlah_halte = 17;
     kor = 1;
     strcpy(corridors[kor].name, "Koridor II");
-    corridors[kor].halte[0] = "RTH Imam Bonjol Padang";
-    corridors[kor].halte[1] = "Masjid Nurul Iman";
-    corridors[kor].halte[2] = "Pasar Gaung";
-    corridors[kor].halte[3] = "Toko Abd Gani";
-    corridors[kor].halte[4] = "Masjid Al Qahaar";
-    corridors[kor].halte[5] = "Pabrik Karet Sungai Beremas";
-    corridors[kor].halte[6] = "Pantai Nirwana";
-    corridors[kor].halte[7] = "Kantor VTS Bungus";
-    corridors[kor].halte[8] = "Pisang Salay Citra Minang";
-    corridors[kor].halte[9] = "SDN 06 Cindakir";
-    corridors[kor].halte[10] = "Cecen Cellular";
-    corridors[kor].halte[11] = "Naldi Cell/Kedai Aura";
-    corridors[kor].halte[12] = "Puskesmas Pembantu Bungus";
-    corridors[kor].halte[13] = "SDN 12 Teluk Kabung";
-    corridors[kor].halte[14] = "Simpang Sungai Pisang";
+    corridors[kor].kapasitas = 15;
+    corridors[kor].halte = malloc(15 * sizeof(char*));
+    corridors[kor].halte[0] = strdup("RTH Imam Bonjol Padang");
+    corridors[kor].halte[1] = strdup("Masjid Nurul Iman");
+    corridors[kor].halte[2] = strdup("Pasar Gaung");
+    corridors[kor].halte[3] = strdup("Toko Abd Gani");
+    corridors[kor].halte[4] = strdup("Masjid Al Qahaar");
+    corridors[kor].halte[5] = strdup("Pabrik Karet Sungai Beremas");
+    corridors[kor].halte[6] = strdup("Pantai Nirwana");
+    corridors[kor].halte[7] = strdup("Kantor VTS Bungus");
+    corridors[kor].halte[8] = strdup("Pisang Salay Citra Minang");
+    corridors[kor].halte[9] = strdup("SDN 06 Cindakir");
+    corridors[kor].halte[10] = strdup("Cecen Cellular");
+    corridors[kor].halte[11] = strdup("Naldi Cell/Kedai Aura");
+    corridors[kor].halte[12] = strdup("Puskesmas Pembantu Bungus");
+    corridors[kor].halte[13] = strdup("SDN 12 Teluk Kabung");
+    corridors[kor].halte[14] = strdup("Simpang Sungai Pisang");
     corridors[kor].jumlah_halte = 15;
     kor = 2;
     strcpy(corridors[kor].name, "Koridor III");
-    corridors[kor].halte[0] = "Terminal Anak Air";
-    corridors[kor].halte[1] = "Simpang Kalumpang";
-    corridors[kor].halte[2] = "SBPU Anak Air";
-    corridors[kor].halte[3] = "Simpang Koto Tuo";
-    corridors[kor].halte[4] = "Simpang Aia Pacah Permai";
-    corridors[kor].halte[5] = "Simpang Maransi";
-    corridors[kor].halte[6] = "FKG Baiturrahmah";
-    corridors[kor].halte[7] = "Universitas Terbuka";
-    corridors[kor].halte[8] = "SPBU Taruko";
-    corridors[kor].halte[9] = "Kantor Camat Kuranji";
-    corridors[kor].halte[10] = "Simpang Kalumbuk";
-    corridors[kor].halte[11] = "Polsek/ Pukesmas Kuranji";
-    corridors[kor].halte[12] = "Utama Furniture";
-    corridors[kor].halte[13] = "Masjid Jamiatul Huda";
-    corridors[kor].halte[14] = "RS Semen Padang Hospital";
-    corridors[kor].halte[15] = "Poliklinik Fitria";
-    corridors[kor].halte[16] = "Pool ALS";
-    corridors[kor].halte[17] = "Simpang Lubeg";
-    corridors[kor].halte[18] = "Simpang Beringin";
-    corridors[kor].halte[19] = "Pampangan";
-    corridors[kor].halte[20] = "Lantamal";
+    corridors[kor].kapasitas = 21;
+    corridors[kor].halte = malloc(21 * sizeof(char*));
+    corridors[kor].halte[0] = strdup("Terminal Anak Air");
+    corridors[kor].halte[1] = strdup("Simpang Kalumpang");
+    corridors[kor].halte[2] = strdup("SBPU Anak Air");
+    corridors[kor].halte[3] = strdup("Simpang Koto Tuo");
+    corridors[kor].halte[4] = strdup("Simpang Aia Pacah Permai");
+    corridors[kor].halte[5] = strdup("Simpang Maransi");
+    corridors[kor].halte[6] = strdup("FKG Baiturrahmah");
+    corridors[kor].halte[7] = strdup("Universitas Terbuka");
+    corridors[kor].halte[8] = strdup("SPBU Taruko");
+    corridors[kor].halte[9] = strdup("Kantor Camat Kuranji");
+    corridors[kor].halte[10] = strdup("Simpang Kalumbuk");
+    corridors[kor].halte[11] = strdup("Polsek/ Pukesmas Kuranji");
+    corridors[kor].halte[12] = strdup("Utama Furniture");
+    corridors[kor].halte[13] = strdup("Masjid Jamiatul Huda");
+    corridors[kor].halte[14] = strdup("RS Semen Padang Hospital");
+    corridors[kor].halte[15] = strdup("Poliklinik Fitria");
+    corridors[kor].halte[16] = strdup("Pool ALS");
+    corridors[kor].halte[17] = strdup("Simpang Lubeg");
+    corridors[kor].halte[18] = strdup("Simpang Beringin");
+    corridors[kor].halte[19] = strdup("Pampangan");
+    corridors[kor].halte[20] = strdup("Lantamal");
     corridors[kor].jumlah_halte = 21;
     jumlah_koridor = kor + 1;
 }
@@ -217,7 +234,7 @@ static void insert_bentang(TreeNode **root, int kor, int dari, int ke, int jm_id
     for (int i = s; i <= e; i++) {
         if (corridors[kor].halte[i] != NULL) {
             int jlr = (i == jm_idx) ? 1 : 0;
-            *root = insert(*root, i, corridors[kor].halte[i], jlr);
+            *root = insert(*root, kor * 100 + i, corridors[kor].halte[i], jlr);
         }
     }
 }
@@ -246,6 +263,38 @@ static void backtrack(TreeNode *dest) {
         if (cur->jalur == 1 && cur->parent != NULL)
             push_transit(cur->parent);
         cur = cur->parent;
+    }
+}
+
+/* ===== CETAK RUTE DARI TREE (backtrack) ===== */
+static void cetak_rute_tree(const char *asal, const char *tujuan) {
+    printf("\n========================================\n");
+    printf("  RUTE: %s  -->  %s\n", asal, tujuan);
+    printf("========================================\n");
+
+    for (int i = top_rute; i >= 0; i--) {
+        TreeNode *node = stack_rute[i];
+        int kor, idx;
+        find_stop(node->name, &kor, &idx);
+
+        /* Cetak nama halte */
+        if (i == top_rute)
+            printf("  %s (Koridor %d)\n", node->name, kor + 1);
+        else if (strcasecmp(node->name, tujuan) == 0)
+            printf("  %s (tujuan)\n", node->name);
+        else
+            printf("  %s\n", node->name);
+
+        /* Cek transit ke node selanjutnya (menuju tujuan) */
+        if (i > 0) {
+            TreeNode *next = stack_rute[i - 1];
+            int next_kor, next_idx;
+            find_stop(next->name, &next_kor, &next_idx);
+            if (next_kor != kor) {
+                printf("  -- TRANSIT: %s (Koridor %d --> Koridor %d) --\n",
+                       node->name, kor + 1, next_kor + 1);
+            }
+        }
     }
 }
 
@@ -323,7 +372,6 @@ static void cetak_rute(const char *asal, const char *tujuan) {
     }
 }
 
-/* ===== CETAK STACK RUTE (dari tree) ===== */
 /* ===== BANGUN TREE (rute-based, raw ID) ===== */
 void build_tree(char origin[100], char destination[100]) {
     int asal_kor, asal_idx, tujuan_kor, tujuan_idx;
@@ -336,7 +384,7 @@ void build_tree(char origin[100], char destination[100]) {
     }
 
     /* Root = origin */
-    TreeNode *root = createNode(asal_idx, origin, 0);
+    TreeNode *root = createNode(asal_kor * 100 + asal_idx, origin, 0);
 
     /* Route-based tree: insert stops sepanjang rute.
        Priority: segmen TUJUAN diinsert dulu agar tujuan pasti ada di tree. */
@@ -406,8 +454,10 @@ void build_tree(char origin[100], char destination[100]) {
         destroyTree(root); return;
     }
 
-    /* ---- Cetak rute akurat berdasarkan nama ---- */
-    cetak_rute(origin, destination);
+    /* ---- Backtrack dari tujuan ke asal ---- */
+    backtrack(dest_node);
+    /* ---- Cetak rute dari tree (backtrack) ---- */
+    cetak_rute_tree(origin, destination);
 
     destroyTree(root);
 }
@@ -431,35 +481,14 @@ int tambah_halte(const char *nama, int koridor) {
             return 0; /* sudah ada */
     }
 
-    /* Validasi kapasitas penuh */
-    if (corridors[koridor].jumlah_halte >= MAX_STOPS_PER_CORRIDOR)
-            return -2;
+    /* Pastikan kapasitas cukup, lalu tambah halte baru */
+    pastikan_kapasitas(&corridors[koridor], corridors[koridor].jumlah_halte + 1);
 
-    /* Tambah halte baru di akhir daftar */
     int idx = corridors[koridor].jumlah_halte;
-    corridors[koridor].halte[idx] = malloc(strlen(nama) + 1);
-    strcpy(corridors[koridor].halte[idx], nama);
+    corridors[koridor].halte[idx] = strdup(nama);
     corridors[koridor].jumlah_halte++;
 
     return 1; /* berhasil */
-}
-
-void simpan_data(const char *filename) {
-    FILE *fp = fopen(filename, "w");
-    if (!fp) {
-        printf("Gagal membuka file '%s' untuk menulis.\n", filename);
-        return;
-    }
-
-    for (int i = 0; i < jumlah_koridor; i++) {
-        fprintf(fp, "#%s\n", corridors[i].name);
-        for (int j = 0; j < corridors[i].jumlah_halte; j++) {
-            fprintf(fp, "%s\n", corridors[i].halte[j]);
-        }
-    }
-
-    fclose(fp);
-    printf("Data berhasil disimpan ke '%s'\n", filename);
 }
 
 int hapus_halte(int koridor, int index) {
@@ -480,5 +509,31 @@ int hapus_halte(int koridor, int index) {
     corridors[koridor].halte[corridors[koridor].jumlah_halte - 1] = NULL;
     corridors[koridor].jumlah_halte--;
 
+    /* Shrink jika kapasitas terlalu besar (kurang dari 1/4 terpakai) */
+    if (corridors[koridor].kapasitas > 8 &&
+        corridors[koridor].jumlah_halte < corridors[koridor].kapasitas / 4) {
+        int baru = corridors[koridor].kapasitas / 2;
+        corridors[koridor].halte = realloc(corridors[koridor].halte, baru * sizeof(char*));
+        corridors[koridor].kapasitas = baru;
+    }
+
     return 1; /* berhasil */
+}
+
+void simpan_data(const char *filename) {
+    FILE *fp = fopen(filename, "w");
+    if (!fp) {
+        printf("Gagal membuka file '%s' untuk menulis.\n", filename);
+        return;
+    }
+
+    for (int i = 0; i < jumlah_koridor; i++) {
+        fprintf(fp, "#%s\n", corridors[i].name);
+        for (int j = 0; j < corridors[i].jumlah_halte; j++) {
+            fprintf(fp, "%s\n", corridors[i].halte[j]);
+        }
+    }
+
+    fclose(fp);
+    printf("Data berhasil disimpan ke '%s'\n", filename);
 }

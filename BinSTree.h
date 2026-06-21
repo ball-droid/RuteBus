@@ -37,4 +37,8 @@ void printTree(TreeNode* root, int level);
 /* Hapus seluruh tree */
 void destroyTree(TreeNode* root);
 
+/* Serialisasi tree ke file */
+void simpan_tree(const char *filename, TreeNode *root);
+TreeNode* muat_tree(const char *filename);
+
 #endif
