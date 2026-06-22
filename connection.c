@@ -311,7 +311,7 @@ static void cetak_rute(const char *asal, const char *tujuan) {
     if (ak == tk) {
         printf("  %s (Koridor %d)\n", asal, ak + 1);
         int step = (ai < ti) ? 1 : -1;
-        for (int i = ai + step; i != ti + step; i += step)
+        for (int i = ai + step; i != ti; i += step)
           printf("  %s\n", corridors[ak].halte[i]);
         printf("  %s (tujuan)\n", tujuan);
         return;
@@ -329,7 +329,7 @@ static void cetak_rute(const char *asal, const char *tujuan) {
         printf("  -- TRANSIT: %s (Koridor %d --> Koridor %d) --\n",
                corridors[0].halte[mi], 1, tk + 1);
         step = (ci < ti) ? 1 : -1;
-        for (int i = ci + step; i != ti + step; i += step)
+        for (int i = ci + step; i != ti; i += step)
             printf("  %s\n", corridors[tk].halte[i]);
         printf("  %s (tujuan)\n", tujuan);
     }
@@ -345,7 +345,7 @@ static void cetak_rute(const char *asal, const char *tujuan) {
         printf("  -- TRANSIT: %s (Koridor %d --> Koridor %d) --\n",
                corridors[0].halte[mi], ak + 1, 1);
         step = (mi < ti) ? 1 : -1;
-        for (int i = mi + step; i != ti + step; i += step)
+        for (int i = mi + step; i != ti; i += step)
             printf("  %s\n", corridors[0].halte[i]);
         printf("  %s (tujuan)\n", tujuan);
     }
@@ -366,7 +366,7 @@ static void cetak_rute(const char *asal, const char *tujuan) {
         printf("  -- TRANSIT: %s (Koridor %d --> Koridor %d) --\n",
                corridors[0].halte[m2], 1, tk + 1);
         step = (c2 < ti) ? 1 : -1;
-        for (int i = c2 + step; i != ti + step; i += step)
+        for (int i = c2 + step; i != ti; i += step)
             printf("  %s\n", corridors[tk].halte[i]);
         printf("  %s (tujuan)\n", tujuan);
     }
@@ -446,18 +446,7 @@ void build_tree(char origin[100], char destination[100]) {
         }
     }
 
-    /* ---- BFS cari tujuan ---- */
-    TreeNode *dest_node = bfs_cari(root, destination);
-    if (dest_node == NULL) {
-        printf("\nTujuan '%s' tidak ditemukan.\n", destination);
-        cetak_rute(origin, destination);
-        destroyTree(root); return;
-    }
-
-    /* ---- Backtrack dari tujuan ke asal ---- */
-    backtrack(dest_node);
-    /* ---- Cetak rute dari tree (backtrack) ---- */
-    cetak_rute_tree(origin, destination);
+    cetak_rute(origin, destination);
 
     destroyTree(root);
 }
