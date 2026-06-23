@@ -5,6 +5,13 @@
 
 #define FILE_DATA "data/halte.txt"
 
+/*
+ * Modul: Input
+ * Membaca string dari stdin, menghapus newline di akhir.
+ * Param buf: buffer tujuan, size: ukuran maksimal buffer.
+ * Tidak mengembalikan nilai (void).
+ * Dipanggil oleh: main() untuk semua input user.
+ */
 static void baca_string(char *buf, int size) {
     if (fgets(buf, size, stdin) != NULL) {
         size_t len = strlen(buf);
@@ -13,6 +20,12 @@ static void baca_string(char *buf, int size) {
     }
 }
 
+/*
+ * Modul: Main / Entry Point
+ * Program utama Sistem Rute Bus Trans Padang.
+ * Alur: load_data() → loop menu (cari rute / tambah halte / hapus halte / keluar).
+ * Menggunakan modul dari connection.h (build_tree, tambah_halte, hapus_halte, dll).
+ */
 int main() {
     char asal[100], tujuan[100], nama_halte[100];
     int pilihan, koridor_pilih, halte_pilih;

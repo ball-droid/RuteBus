@@ -1,5 +1,19 @@
 #include "BinSTree.h"
 
+/*
+ * ==================== MODUL: IMPLEMENTASI TREE NODE ====================
+ * Implementasi fungsi-fungsi yang dideklarasikan di BinSTree.h.
+ * =======================================================================
+ */
+
+/*
+ * createNode: Konstruktor node sequential chain.
+ * Param id: identifier (koridor*100 + index), name: nama halte,
+ *           jalur: 0=biasa, 1=transit.
+ * Return: pointer ke node baru (alokasi heap).
+ * Memanggil: malloc().
+ * Dipanggil oleh: insert_bentang() di connection.c.
+ */
 TreeNode* createNode(int id, char name[], int jalur)
 {
     TreeNode* node = (TreeNode*)malloc(sizeof(TreeNode));
@@ -15,6 +29,11 @@ TreeNode* createNode(int id, char name[], int jalur)
     return node;
 }
 
+/*
+ * insert: Insert node ke BST berdasarkan aturan BST (id).
+ * TIDAK DIPAKAI di alur utama (digantikan insert_bentang + sequential chain).
+ * Dipertahankan sebagai referensi.
+ */
 TreeNode* insert(TreeNode* root,
                  int id,
                  char name[],
@@ -41,6 +60,10 @@ TreeNode* insert(TreeNode* root,
     return root;
 }
 
+/*
+ * insertLeft: Ikat child sebagai leftChild parent.
+ * TIDAK DIPAKAI di alur utama.
+ */
 void insertLeft(TreeNode* parent, TreeNode* child)
 {
     if(parent != NULL)
@@ -52,6 +75,10 @@ void insertLeft(TreeNode* parent, TreeNode* child)
     }
 }
 
+/*
+ * insertRight: Ikat child sebagai rightChild parent.
+ * TIDAK DIPAKAI di alur utama (rightChild di-set langsung oleh insert_bentang).
+ */
 void insertRight(TreeNode* parent, TreeNode* child)
 {
     if(parent != NULL)
@@ -63,6 +90,11 @@ void insertRight(TreeNode* parent, TreeNode* child)
     }
 }
 
+/*
+ * destroyTree: Hapus seluruh node tree dari heap (postorder).
+ * Param root: root tree.
+ * Dipanggil oleh: build_tree() di connection.c.
+ */
 void destroyTree(TreeNode* root)
 {
     if(root == NULL)
@@ -74,6 +106,10 @@ void destroyTree(TreeNode* root)
     free(root);
 }
 
+/*
+ * preorder: Traversal preorder (root → kiri → kanan).
+ * Untuk debugging/visualisasi.
+ */
 void preorder(TreeNode* root)
 {
     if(root == NULL)
@@ -85,6 +121,10 @@ void preorder(TreeNode* root)
     preorder(root->rightChild);
 }
 
+/*
+ * inorder: Traversal inorder (kiri → root → kanan).
+ * Untuk debugging/visualisasi.
+ */
 void inorder(TreeNode* root)
 {
     if(root == NULL)
@@ -97,6 +137,10 @@ void inorder(TreeNode* root)
     inorder(root->rightChild);
 }
 
+/*
+ * postorder: Traversal postorder (kiri → kanan → root).
+ * Untuk debugging/visualisasi.
+ */
 void postorder(TreeNode* root)
 {
     if(root == NULL)
@@ -108,6 +152,10 @@ void postorder(TreeNode* root)
     printf("%d - %s\n", root->id, root->name);
 }
 
+/*
+ * printTree: Cetak tree secara visual dengan indentasi.
+ * TIDAK DIPAKAI di alur utama.
+ */
 void printTree(TreeNode* root, int level)
 {
     if(root == NULL)
@@ -122,8 +170,17 @@ void printTree(TreeNode* root, int level)
     printTree(root->rightChild, level + 1);
 }
 
-/* ===== SERIALISASI TREE ===== */
+/*
+ * ===== SERIALISASI TREE =====
+ */
 
+/*
+ * tulis_node: Menulis node ke file secara rekursif (preorder).
+ * Format: "id|name|jalur" dengan indentasi per level.
+ * Node NULL ditulis sebagai "#".
+ * Param fp: file pointer, node: node yang akan ditulis, depth: level kedalaman.
+ * Dipanggil oleh: simpan_tree().
+ */
 static void tulis_node(FILE *fp, TreeNode *node, int depth) {
     if (node == NULL) {
         for (int i = 0; i < depth; i++) fprintf(fp, "    ");
@@ -136,6 +193,14 @@ static void tulis_node(FILE *fp, TreeNode *node, int depth) {
     tulis_node(fp, node->rightChild, depth + 1);
 }
 
+/*
+ * simpan_tree: Menyimpan tree ke file dalam format preorder.
+ * Param filename: path file output (biasanya "data/tree.txt").
+ * Format: "# BST Preorder Traversal" di baris pertama,
+ *         lalu "id|nama|jalur" per node dengan indentasi.
+ * Memanggil: tulis_node().
+ * Dipanggil oleh: build_tree() di connection.c.
+ */
 void simpan_tree(const char *filename, TreeNode *root) {
     FILE *fp = fopen(filename, "w");
     if (!fp) {
@@ -147,5 +212,3 @@ void simpan_tree(const char *filename, TreeNode *root) {
     fclose(fp);
     printf("Tree berhasil disimpan ke '%s'\n", filename);
 }
-
-/* muat_tree telah dihapus — tidak digunakan */

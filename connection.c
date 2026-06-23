@@ -2,13 +2,30 @@
 #include "connection.h"
 #define FILE_TREE "data/tree.txt"
 
+/*
+ * ==================== MODUL: IMPLEMENTASI MANAJEMEN DATA & RUTE ====================
+ * Implementasi fungsi-fungsi yang dideklarasikan di connection.h dan
+ * fungsi-fungsi internal (static) untuk:
+ * - Load/save data koridor dari/ke file
+ * - Membangun sequential chain tree dan BFS
+ * - Manajemen halte (tambah/hapus)
+ * ====================================================================================
+ */
+
+/* Variabel global — menyimpan seluruh data koridor di memori */
 Corridor corridors[MAX_CORRIDORS];
 int jumlah_koridor;
 
-/* Forward declarations */
+/* ===== Fungsi Internal (static) ===== */
 int find_stop(char *name, int *kor, int *idx);
 int cari_iris(int kor_cabang, int *main_idx, int *cabang_idx);
 
+/*
+ * pastikan_kapasitas: Grow array jika kapasitas tidak mencukupi.
+ * Param cor: pointer ke Corridor, butuh: jumlah minimum yang diperlukan.
+ * Strategi: jika kapasitas 0 → alokasi 4, jika tidak → double sampai cukup.
+ * Dipanggil oleh: load_data(), tambah_halte().
+ */
 static void pastikan_kapasitas(Corridor *cor, int butuh) {
     if (butuh <= cor->kapasitas) return;
     int baru = cor->kapasitas == 0 ? 4 : cor->kapasitas;
@@ -17,16 +34,14 @@ static void pastikan_kapasitas(Corridor *cor, int butuh) {
     cor->kapasitas = baru;
 }
 
-/* ===== LOAD DATA DARI FILE ===== */
-/* Format file:
-     #Nama Koridor
-     Halte1
-     Halte2
-     ...
-     #Koridor Berikutnya
-     ...
-   Baris # menandai koridor baru. Baris tanpa # adalah halte.
-*/
+/*
+ * load_data: Membaca file data halte, mengisi corridors[] dan jumlah_koridor.
+ * Param filename: path ke file data/halte.txt.
+ * Format file: #NamaKoridor → halte per baris → #KoridorBerikutnya → ...
+ * Skip BOM UTF-8. Fallback ke init_bus_data() jika file tidak ditemukan.
+ * Memanggil: pastikan_kapasitas(), validasi_data() di akhir.
+ * Dipanggil oleh: main().
+ */
 void load_data(const char *filename) {
     FILE *fp = fopen(filename, "r");
     if (!fp) {
@@ -69,7 +84,13 @@ void load_data(const char *filename) {
     printf("Memuat %d koridor dari '%s'\n", jumlah_koridor, filename);
 }
 
-/* ===== VALIDASI DATA ===== */
+/*
+ * validasi_data: Memastikan tiap koridor cabang punya irisan dengan koridor utama.
+ * Juga cek tidak ada irisan antar koridor cabang.
+ * Membaca: corridors[], jumlah_koridor (global).
+ * Memanggil: cari_iris().
+ * Dipanggil oleh: load_data().
+ */
 void validasi_data() {
     int masalah = 0;
     printf("\n=== VALIDASI DATA ===\n");
@@ -125,7 +146,12 @@ void validasi_data() {
     printf("============================\n");
 }
 
-/* Fallback data default jika file tidak tersedia */
+/*
+ * init_bus_data: Data bawaan 3 koridor bus Trans Padang (~53 halte).
+ * Fallback jika file data/halte.txt tidak ditemukan.
+ * Menulis: corridors[], jumlah_koridor (global).
+ * Dipanggil oleh: load_data().
+ */
 void init_bus_data() {
     int kor = 0;
     strcpy(corridors[kor].name, "Koridor I");
@@ -198,7 +224,18 @@ void init_bus_data() {
     jumlah_koridor = kor + 1;
 }
 
-/* ===== HELPERS ===== */
+/*
+ * ===== FUNGSI BANTU (HELPERS) =====
+ */
+
+/*
+ * find_stop: Mencari nama halte di seluruh koridor.
+ * Param name: nama halte yang dicari.
+ * Param kor, idx: output — pointer untuk menyimpan hasil (koridor, index).
+ * Return: 1 jika ditemukan, 0 jika tidak.
+ * Membaca: corridors[], jumlah_koridor (global).
+ * Dipanggil oleh: build_tree(), cetak_rute_tree(), cetak_rute().
+ */
 int find_stop(char *name, int *kor, int *idx) {
     for (int k = 0; k < MAX_CORRIDORS; k++)
         for (int i = 0; i < corridors[k].jumlah_halte; i++)
@@ -206,6 +243,15 @@ int find_stop(char *name, int *kor, int *idx) {
     return 0;
 }
 
+/*
+ * cari_iris: Mencari titik irisan antara koridor cabang dengan koridor utama.
+ * Param kor_cabang: indeks koridor cabang.
+ * Param main_idx, cabang_idx: output — index di koridor utama dan cabang.
+ * Return: 1 jika ditemukan irisan, 0 jika tidak.
+ * Asumsi: irisan hanya terjadi di halte PERTAMA atau TERAKHIR koridor cabang.
+ * Membaca: corridors[] (global).
+ * Dipanggil oleh: validasi_data(), build_tree().
+ */
 int cari_iris(int kor_cabang, int *main_idx, int *cabang_idx) {
     for (int i = 0; i < corridors[0].jumlah_halte; i++)
         if (strcasecmp(corridors[0].halte[i], corridors[kor_cabang].halte[0]) == 0)
@@ -217,7 +263,12 @@ int cari_iris(int kor_cabang, int *main_idx, int *cabang_idx) {
     return 0;
 }
 
-/* ===== STACK ===== */
+/*
+ * ===== STACK UNTUK BACKTRACK =====
+ * stack_rute: menyimpan urutan node dari asal ke tujuan.
+ * stack_transit: menyimpan node transit (tidak dipakai untuk output,
+ *                tetapi tetap diisi untuk dokumentasi).
+ */
 #define MAX_STACK 300
 static TreeNode *stack_rute[MAX_STACK];
 static int top_rute = -1;
@@ -227,15 +278,32 @@ static int top_transit = -1;
 static void push_rute(TreeNode *n)   { stack_rute[++top_rute] = n; }
 static void push_transit(TreeNode *n){ stack_transit[++top_transit] = n; }
 
-/* ===== INSERT BENTANG (sequential chain) ===== */
-/* Membangun tree sebagai right-skewed chain (bukan BST).
-   Urutan node = urutan rute, parent pointer = node sebelumnya. */
+/*
+ * ===== SEQUENTIAL CHAIN TREE =====
+ * Tree dibangun sebagai right-skewed chain:
+ * - rightChild = node berikutnya dalam rute
+ * - parent = node sebelumnya dalam rute
+ * - Urutan node = urutan rute (bukan urutan ID seperti BST)
+ */
+
+/*
+ * cari_ekor: Mencari node terakhir dalam rantai kanan.
+ * Param root: root tree.
+ * Return: pointer ke node terakhir (rightChild == NULL).
+ * Dipanggil oleh: insert_bentang().
+ */
 static TreeNode* cari_ekor(TreeNode *root) {
     if (root == NULL) return NULL;
     while (root->rightChild != NULL) root = root->rightChild;
     return root;
 }
 
+/*
+ * node_ada: Memeriksa apakah nama halte sudah ada di sequential chain.
+ * Param root: root tree, name: nama yang dicari.
+ * Return: 1 jika sudah ada, 0 jika belum.
+ * Dipanggil oleh: insert_bentang() — untuk cegah duplikat.
+ */
 static int node_ada(TreeNode *root, const char *name) {
     TreeNode *cur = root;
     while (cur != NULL) {
@@ -245,6 +313,17 @@ static int node_ada(TreeNode *root, const char *name) {
     return 0;
 }
 
+/*
+ * insert_bentang: Menambahkan node-node ke sequential chain.
+ * Param root: pointer ke root tree (bisa berubah jika root NULL).
+ * Param kor: indeks koridor.
+ * Param dari, ke: range index halte di koridor (bisa maju/mundur).
+ * Param jm_idx: index junction (-1 jika tidak ada transit di segmen ini).
+ * Proses: untuk setiap halte di range, jika belum ada di chain,
+ *         buat node baru dan append ke ekor chain.
+ * Memanggil: createNode(), cari_ekor(), node_ada().
+ * Dipanggil oleh: build_tree().
+ */
 static void insert_bentang(TreeNode **root, int kor, int dari, int ke, int jm_idx) {
     int step = (dari <= ke) ? 1 : -1;
     for (int i = dari; i != ke + step; i += step) {
@@ -264,7 +343,20 @@ static void insert_bentang(TreeNode **root, int kor, int dari, int ke, int jm_id
     }
 }
 
-/* ===== BFS ===== */
+/*
+ * ===== BFS (BREADTH-FIRST SEARCH) =====
+ * Mencari node tujuan dalam sequential chain tree.
+ * Karena tree adalah right-skewed chain, BFS mengunjungi node
+ * dalam urutan yang sama dengan urutan rute.
+ */
+
+/*
+ * bfs_cari: Mencari node berdasarkan nama di tree.
+ * Param root: root tree, target: nama halte yang dicari.
+ * Return: pointer ke node jika ditemukan, NULL jika tidak.
+ * Menggunakan: static queue (TreeNode* q[MAX_Q]).
+ * Dipanggil oleh: build_tree().
+ */
 #define MAX_Q 500
 static TreeNode* bfs_cari(TreeNode *root, const char *target) {
     static TreeNode *q[MAX_Q];
@@ -279,7 +371,20 @@ static TreeNode* bfs_cari(TreeNode *root, const char *target) {
     return NULL;
 }
 
-/* ===== BACKTRACK ===== */
+/*
+ * ===== BACKTRACK =====
+ * Menelusuri rute dari node tujuan ke node asal via parent pointer.
+ * Hasil disimpan ke stack_rute[] untuk dibaca oleh cetak_rute_tree().
+ */
+
+/*
+ * backtrack: Tracing dari tujuan ke asal via parent chain.
+ * Param dest: node tujuan (hasil bfs_cari).
+ * Proses: mulai dari dest, naik ke parent, push ke stack_rute.
+ *         Node transit (jalur==1) juga di-push ke stack_transit.
+ * Memanggil: push_rute(), push_transit().
+ * Dipanggil oleh: build_tree().
+ */
 static void backtrack(TreeNode *dest) {
     top_rute = top_transit = -1;
     TreeNode *cur = dest;
@@ -291,7 +396,20 @@ static void backtrack(TreeNode *dest) {
     }
 }
 
-/* ===== CETAK RUTE DARI TREE (backtrack) ===== */
+/*
+ * ===== CETAK RUTE =====
+ * Membaca stack_rute[] hasil backtrack, mencetak rute ke terminal.
+ * Mendeteksi transit dengan membandingkan koridor antar node.
+ */
+
+/*
+ * cetak_rute_tree: Mencetak rute dari stack ke terminal.
+ * Param asal, tujuan: nama halte (untuk header dan penanda tujuan).
+ * Proses: iterasi stack_rute dari top (asal) ke bottom (tujuan).
+ *         Cetak nama halte + koridor + deteksi transit.
+ * Memanggil: find_stop() untuk deteksi koridor.
+ * Dipanggil oleh: build_tree().
+ */
 static void cetak_rute_tree(const char *asal, const char *tujuan) {
     printf("\n========================================\n");
     printf("  RUTE: %s  -->  %s\n", asal, tujuan);
@@ -302,7 +420,6 @@ static void cetak_rute_tree(const char *asal, const char *tujuan) {
         int kor, idx;
         find_stop(node->name, &kor, &idx);
 
-        /* Cetak nama halte */
         if (i == top_rute)
             printf("  %s (Koridor %d)\n", node->name, kor + 1);
         else if (strcasecmp(node->name, tujuan) == 0)
@@ -310,7 +427,6 @@ static void cetak_rute_tree(const char *asal, const char *tujuan) {
         else
             printf("  %s\n", node->name);
 
-        /* Cek transit ke node selanjutnya (menuju tujuan) */
         if (i > 0) {
             TreeNode *next = stack_rute[i - 1];
             int next_kor, next_idx;
@@ -323,7 +439,11 @@ static void cetak_rute_tree(const char *asal, const char *tujuan) {
     }
 }
 
-/* ===== CETAK RUTE AKURAT (dari navigasi koridor) ===== */
+/*
+ * cetak_rute: (TIDAK DIPAKAI — digantikan cetak_rute_tree)
+ * Mencetak rute via navigasi array langsung (koridor[idx]).
+ * Dipertahankan sebagai referensi implementasi awal.
+ */
 static void cetak_rute(const char *asal, const char *tujuan) {
     int ak, ai, tk, ti;
     find_stop((char*)asal, &ak, &ai);
@@ -484,7 +604,15 @@ void build_tree(char origin[100], char destination[100]) {
     destroyTree(root);
 }
 
-/* ===== TAMBAH HALTE BARU ===== */
+/*
+ * ===== MANAJEMEN HALTE =====
+ */
+
+/*
+ * tampilkan_koridor: Mencetak daftar koridor beserta jumlah halte.
+ * Membaca: corridors[], jumlah_koridor (global).
+ * Dipanggil oleh: main() — fitur Tambah/Hapus Halte.
+ */
 void tampilkan_koridor() {
     printf("\n=== DAFTAR KORIDOR ===\n");
     for (int i = 0; i < jumlah_koridor; i++) {
@@ -493,37 +621,46 @@ void tampilkan_koridor() {
     printf("======================\n");
 }
 
+/*
+ * tambah_halte: Menambah halte baru ke koridor.
+ * Param nama: nama halte, koridor: indeks koridor (0-based).
+ * Proses: validasi indeks → cek duplikat (strcasecmp) →
+ *         pastikan_kapasitas → strdup → jumlah_halte++.
+ * Return: 1 sukses, 0 duplikat, -1 error indeks.
+ * Memanggil: pastikan_kapasitas().
+ * Dipanggil oleh: main() — fitur Tambah Halte.
+ */
 int tambah_halte(const char *nama, int koridor) {
-    /* Validasi indeks koridor */
     if (koridor < 0 || koridor >= jumlah_koridor) return -1;
 
-    /* Validasi duplikat: cek apakah nama halte sudah ada di koridor yang sama */
     for (int i = 0; i < corridors[koridor].jumlah_halte; i++) {
         if (strcasecmp(corridors[koridor].halte[i], nama) == 0)
-            return 0; /* sudah ada */
+            return 0;
     }
 
-    /* Pastikan kapasitas cukup, lalu tambah halte baru */
     pastikan_kapasitas(&corridors[koridor], corridors[koridor].jumlah_halte + 1);
 
     int idx = corridors[koridor].jumlah_halte;
     corridors[koridor].halte[idx] = strdup(nama);
     corridors[koridor].jumlah_halte++;
 
-    return 1; /* berhasil */
+    return 1;
 }
 
+/*
+ * hapus_halte: Menghapus halte di indeks tertentu.
+ * Param koridor: indeks koridor, index: indeks halte (0-based).
+ * Proses: validasi indeks → free string → geser array ke kiri →
+ *         jumlah_halte-- → shrink jika < 25% kapasitas terpakai.
+ * Return: 1 sukses, -1 error koridor, -2 error index.
+ * Dipanggil oleh: main() — fitur Hapus Halte.
+ */
 int hapus_halte(int koridor, int index) {
-    /* Validasi indeks koridor */
     if (koridor < 0 || koridor >= jumlah_koridor) return -1;
-
-    /* Validasi indeks halte */
     if (index < 0 || index >= corridors[koridor].jumlah_halte) return -2;
 
-    /* Bebaskan memori nama halte */
     free(corridors[koridor].halte[index]);
 
-    /* Geser halte setelahnya ke kiri */
     for (int i = index; i < corridors[koridor].jumlah_halte - 1; i++) {
         corridors[koridor].halte[i] = corridors[koridor].halte[i + 1];
     }
@@ -531,7 +668,6 @@ int hapus_halte(int koridor, int index) {
     corridors[koridor].halte[corridors[koridor].jumlah_halte - 1] = NULL;
     corridors[koridor].jumlah_halte--;
 
-    /* Shrink jika kapasitas terlalu besar (kurang dari 1/4 terpakai) */
     if (corridors[koridor].kapasitas > 8 &&
         corridors[koridor].jumlah_halte < corridors[koridor].kapasitas / 4) {
         int baru = corridors[koridor].kapasitas / 2;
@@ -539,9 +675,16 @@ int hapus_halte(int koridor, int index) {
         corridors[koridor].kapasitas = baru;
     }
 
-    return 1; /* berhasil */
+    return 1;
 }
 
+/*
+ * simpan_data: Menulis data koridor dan halte ke file.
+ * Param filename: path file output (biasanya "data/halte.txt").
+ * Format: #NamaKoridor → halte per baris → #KoridorBerikutnya → ...
+ * Membaca: corridors[], jumlah_koridor (global).
+ * Dipanggil oleh: main() — setelah tambah/hapus halte.
+ */
 void simpan_data(const char *filename) {
     FILE *fp = fopen(filename, "w");
     if (!fp) {

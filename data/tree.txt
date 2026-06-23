@@ -1,68 +1,10 @@
 # BST Preorder Traversal
-0|pool damri|0
+2|GOR H Agus Salim|0
     #
     1|RTH Imam Bonjol Padang|0
         #
-        2|GOR H Agus Salim|0
+        101|Masjid Nurul Iman|1
             #
-            3|Masjid Raya Sumatera Barat|0
+            102|Pasar Gaung|0
                 #
-                4|DPRD Provinsi Sumatera Barat|0
-                    #
-                    5|Basko Grand Mall|0
-                        #
-                        6|Simpang Labor|0
-                            #
-                            7|Universitas Negeri Padang Air Tawar|0
-                                #
-                                8|Simpang Tunggul Hitam|0
-                                    #
-                                    9|Simpang GIA|0
-                                        #
-                                        10|Asrama Haji Padang|0
-                                            #
-                                            11|Perumahan Monang Indah|0
-                                                #
-                                                12|SMP Negeri 15 Padang|0
-                                                    #
-                                                    13|Fakultas Kedokteran Universitas Negeri Padang|0
-                                                        #
-                                                        14|Kayu Kalek|0
-                                                            #
-                                                            15|Kompleks Mega Permai|0
-                                                                #
-                                                                16|Terminal Anak Air|0
-                                                                    #
-                                                                    201|Simpang Kalumpang|1
-                                                                        #
-                                                                        202|SBPU Anak Air|0
-                                                                            #
-                                                                            203|Simpang Koto Tuo|0
-                                                                                #
-                                                                                204|Simpang Aia Pacah Permai|0
-                                                                                    #
-                                                                                    205|Simpang Maransi|0
-                                                                                        #
-                                                                                        206|FKG Baiturrahmah|0
-                                                                                            #
-                                                                                            207|Universitas Terbuka|0
-                                                                                                #
-                                                                                                208|SPBU Taruko|0
-                                                                                                    #
-                                                                                                    209|Kantor Camat Kuranji|0
-                                                                                                        #
-                                                                                                        210|Simpang Kalumbuk|0
-                                                                                                            #
-                                                                                                            211|Polsek/ Pukesmas Kuranji|0
-                                                                                                                #
-                                                                                                                212|Utama Furniture|0
-                                                                                                                    #
-                                                                                                                    213|Masjid Jamiatul Huda|0
-                                                                                                                        #
-                                                                                                                        214|RS Semen Padang Hospital|0
-                                                                                                                            #
-                                                                                                                            215|Poliklinik Fitria|0
-                                                                                                                                #
-                                                                                                                                216|Pool ALS|0
-                                                                                                                                    #
-                                                                                                                                    #
+                #
