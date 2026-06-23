@@ -227,14 +227,39 @@ static int top_transit = -1;
 static void push_rute(TreeNode *n)   { stack_rute[++top_rute] = n; }
 static void push_transit(TreeNode *n){ stack_transit[++top_transit] = n; }
 
-/* ===== INSERT BENTANG ===== */
+/* ===== INSERT BENTANG (sequential chain) ===== */
+/* Membangun tree sebagai right-skewed chain (bukan BST).
+   Urutan node = urutan rute, parent pointer = node sebelumnya. */
+static TreeNode* cari_ekor(TreeNode *root) {
+    if (root == NULL) return NULL;
+    while (root->rightChild != NULL) root = root->rightChild;
+    return root;
+}
+
+static int node_ada(TreeNode *root, const char *name) {
+    TreeNode *cur = root;
+    while (cur != NULL) {
+        if (strcasecmp(cur->name, name) == 0) return 1;
+        cur = cur->rightChild;
+    }
+    return 0;
+}
+
 static void insert_bentang(TreeNode **root, int kor, int dari, int ke, int jm_idx) {
-    int s = (dari < ke) ? dari : ke;
-    int e = (dari < ke) ? ke   : dari;
-    for (int i = s; i <= e; i++) {
-        if (corridors[kor].halte[i] != NULL) {
-            int jlr = (i == jm_idx) ? 1 : 0;
-            *root = insert(*root, kor * 100 + i, corridors[kor].halte[i], jlr);
+    int step = (dari <= ke) ? 1 : -1;
+    for (int i = dari; i != ke + step; i += step) {
+        if (corridors[kor].halte[i] == NULL) continue;
+        if (node_ada(*root, corridors[kor].halte[i])) continue;
+
+        int jlr = (i == jm_idx) ? 1 : 0;
+        TreeNode *node = createNode(kor * 100 + i, corridors[kor].halte[i], jlr);
+
+        if (*root == NULL) {
+            *root = node;
+        } else {
+            TreeNode *ekor = cari_ekor(*root);
+            ekor->rightChild = node;
+            node->parent = ekor;
         }
     }
 }
@@ -386,8 +411,8 @@ void build_tree(char origin[100], char destination[100]) {
     /* Root = origin */
     TreeNode *root = createNode(asal_kor * 100 + asal_idx, origin, 0);
 
-    /* Route-based tree: insert stops sepanjang rute.
-       Priority: segmen TUJUAN diinsert dulu agar tujuan pasti ada di tree. */
+    /* Route-based tree: insert stops sepanjang rute sebagai sequential chain.
+       Urutan: dari asal menuju transit, lalu dari transit menuju tujuan. */
     if (asal_kor == tujuan_kor) {
         if (asal_idx < tujuan_idx)
             insert_bentang(&root, asal_kor, asal_idx + 1, tujuan_idx, -1);
@@ -398,55 +423,63 @@ void build_tree(char origin[100], char destination[100]) {
         int mi, ci;
         if (cari_iris(tujuan_kor, &mi, &ci)) {
             int jm = (ci == 0) ? 1 : (ci == corridors[tujuan_kor].jumlah_halte - 1) ? ci - 1 : -1;
+            if (asal_idx < mi)
+                insert_bentang(&root, 0, asal_idx + 1, mi, -1);
+            else if (asal_idx > mi)
+                insert_bentang(&root, 0, asal_idx - 1, mi, -1);
+
             if (ci < tujuan_idx)
                 insert_bentang(&root, tujuan_kor, ci + 1, tujuan_idx, jm);
             else
                 insert_bentang(&root, tujuan_kor, tujuan_idx, ci - 1, jm);
-
-            if (asal_idx < mi)
-                insert_bentang(&root, 0, asal_idx + 1, mi, -1);
-            else
-                insert_bentang(&root, 0, mi, asal_idx - 1, -1);
         }
     }
     else if (tujuan_kor == 0) {
         int mi, ci;
         if (cari_iris(asal_kor, &mi, &ci)) {
-            if (mi < tujuan_idx)
-                insert_bentang(&root, 0, mi + 1, tujuan_idx, -1);
-            else
-                insert_bentang(&root, 0, tujuan_idx, mi - 1, -1);
-
             int jm = (ci == 0) ? 1 : (ci == corridors[asal_kor].jumlah_halte - 1) ? ci - 1 : -1;
             if (asal_idx < ci)
                 insert_bentang(&root, asal_kor, asal_idx + 1, ci, jm);
             else
                 insert_bentang(&root, asal_kor, asal_idx - 1, ci, jm);
+
+            if (mi < tujuan_idx)
+                insert_bentang(&root, 0, mi + 1, tujuan_idx, -1);
+            else if (mi > tujuan_idx)
+                insert_bentang(&root, 0, tujuan_idx, mi - 1, -1);
         }
     }
     else {
         int m1, c1, m2, c2;
         if (cari_iris(asal_kor, &m1, &c1) && cari_iris(tujuan_kor, &m2, &c2)) {
-            int jm2 = (c2 == 0) ? 1 : (c2 == corridors[tujuan_kor].jumlah_halte - 1) ? c2 - 1 : -1;
-            if (c2 < tujuan_idx)
-                insert_bentang(&root, tujuan_kor, c2 + 1, tujuan_idx, jm2);
+            int jm1 = (c1 == 0) ? 1 : (c1 == corridors[asal_kor].jumlah_halte - 1) ? c1 - 1 : -1;
+            if (asal_idx < c1)
+                insert_bentang(&root, asal_kor, asal_idx + 1, c1, jm1);
             else
-                insert_bentang(&root, tujuan_kor, tujuan_idx, c2 - 1, jm2);
+                insert_bentang(&root, asal_kor, asal_idx - 1, c1, jm1);
 
             if (m1 < m2)
                 insert_bentang(&root, 0, m1 + 1, m2, -1);
             else if (m1 > m2)
                 insert_bentang(&root, 0, m2, m1 - 1, -1);
 
-            int jm1 = (c1 == 0) ? 1 : (c1 == corridors[asal_kor].jumlah_halte - 1) ? c1 - 1 : -1;
-            if (asal_idx < c1)
-                insert_bentang(&root, asal_kor, asal_idx + 1, c1, jm1);
+            int jm2 = (c2 == 0) ? 1 : (c2 == corridors[tujuan_kor].jumlah_halte - 1) ? c2 - 1 : -1;
+            if (c2 < tujuan_idx)
+                insert_bentang(&root, tujuan_kor, c2 + 1, tujuan_idx, jm2);
             else
-                insert_bentang(&root, asal_kor, asal_idx - 1, c1, jm1);
+                insert_bentang(&root, tujuan_kor, tujuan_idx, c2 - 1, jm2);
         }
     }
 
-    cetak_rute(origin, destination);
+    /* Cari tujuan di tree via BFS, backtrack, lalu cetak rute */
+    TreeNode *dest_node = bfs_cari(root, destination);
+    if (dest_node != NULL) {
+        backtrack(dest_node);
+        cetak_rute_tree(origin, destination);
+    }
+
+    /* Simpan tree ke file */
+    simpan_tree(FILE_TREE, root);
 
     destroyTree(root);
 }
