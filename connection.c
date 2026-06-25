@@ -417,8 +417,7 @@ static void cetak_rute_tree(const char *asal, const char *tujuan) {
 
     for (int i = top_rute; i >= 0; i--) {
         TreeNode *node = stack_rute[i];
-        int kor, idx;
-        find_stop(node->name, &kor, &idx);
+        int kor = node->id / 100;
 
         if (i == top_rute)
             printf("  %s (Koridor %d)\n", node->name, kor + 1);
@@ -429,8 +428,7 @@ static void cetak_rute_tree(const char *asal, const char *tujuan) {
 
         if (i > 0) {
             TreeNode *next = stack_rute[i - 1];
-            int next_kor, next_idx;
-            find_stop(next->name, &next_kor, &next_idx);
+            int next_kor = next->id / 100;
             if (next_kor != kor) {
                 printf("  -- TRANSIT: %s (Koridor %d --> Koridor %d) --\n",
                        node->name, kor + 1, next_kor + 1);
@@ -542,22 +540,22 @@ void build_tree(char origin[100], char destination[100]) {
     else if (asal_kor == 0) {
         int mi, ci;
         if (cari_iris(tujuan_kor, &mi, &ci)) {
-            int jm = (ci == 0) ? 1 : (ci == corridors[tujuan_kor].jumlah_halte - 1) ? ci - 1 : -1;
+            int jm = (ci == 0) ? 0 : (ci == corridors[tujuan_kor].jumlah_halte - 1) ? ci : -1;
             if (asal_idx < mi)
-                insert_bentang(&root, 0, asal_idx + 1, mi, -1);
+                insert_bentang(&root, 0, asal_idx + 1, mi, mi);
             else if (asal_idx > mi)
-                insert_bentang(&root, 0, asal_idx - 1, mi, -1);
+                insert_bentang(&root, 0, asal_idx - 1, mi, mi);
 
             if (ci < tujuan_idx)
                 insert_bentang(&root, tujuan_kor, ci + 1, tujuan_idx, jm);
             else
-                insert_bentang(&root, tujuan_kor, tujuan_idx, ci - 1, jm);
+                insert_bentang(&root, tujuan_kor, ci - 1, tujuan_idx, jm);
         }
     }
     else if (tujuan_kor == 0) {
         int mi, ci;
         if (cari_iris(asal_kor, &mi, &ci)) {
-            int jm = (ci == 0) ? 1 : (ci == corridors[asal_kor].jumlah_halte - 1) ? ci - 1 : -1;
+            int jm = (ci == 0) ? 0 : (ci == corridors[asal_kor].jumlah_halte - 1) ? ci : -1;
             if (asal_idx < ci)
                 insert_bentang(&root, asal_kor, asal_idx + 1, ci, jm);
             else
@@ -566,28 +564,28 @@ void build_tree(char origin[100], char destination[100]) {
             if (mi < tujuan_idx)
                 insert_bentang(&root, 0, mi + 1, tujuan_idx, -1);
             else if (mi > tujuan_idx)
-                insert_bentang(&root, 0, tujuan_idx, mi - 1, -1);
+                insert_bentang(&root, 0, mi - 1, tujuan_idx, -1);
         }
     }
     else {
         int m1, c1, m2, c2;
         if (cari_iris(asal_kor, &m1, &c1) && cari_iris(tujuan_kor, &m2, &c2)) {
-            int jm1 = (c1 == 0) ? 1 : (c1 == corridors[asal_kor].jumlah_halte - 1) ? c1 - 1 : -1;
+            int jm1 = (c1 == 0) ? 0 : (c1 == corridors[asal_kor].jumlah_halte - 1) ? c1 : -1;
             if (asal_idx < c1)
                 insert_bentang(&root, asal_kor, asal_idx + 1, c1, jm1);
             else
                 insert_bentang(&root, asal_kor, asal_idx - 1, c1, jm1);
 
             if (m1 < m2)
-                insert_bentang(&root, 0, m1 + 1, m2, -1);
+                insert_bentang(&root, 0, m1 + 1, m2, m2);
             else if (m1 > m2)
-                insert_bentang(&root, 0, m2, m1 - 1, -1);
+                insert_bentang(&root, 0, m1 - 1, m2, m2);
 
-            int jm2 = (c2 == 0) ? 1 : (c2 == corridors[tujuan_kor].jumlah_halte - 1) ? c2 - 1 : -1;
+            int jm2 = (c2 == 0) ? 0 : (c2 == corridors[tujuan_kor].jumlah_halte - 1) ? c2 : -1;
             if (c2 < tujuan_idx)
                 insert_bentang(&root, tujuan_kor, c2 + 1, tujuan_idx, jm2);
             else
-                insert_bentang(&root, tujuan_kor, tujuan_idx, c2 - 1, jm2);
+                insert_bentang(&root, tujuan_kor, c2 - 1, tujuan_idx, jm2);
         }
     }
 
