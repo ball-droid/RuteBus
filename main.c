@@ -1,3 +1,25 @@
+/*
+ * =========================================================================
+ * MODUL      : main.c - Program Utama / Antarmuka Pengguna
+ * =========================================================================
+ * FUNGSI     : Titik masuk program. Menyediakan menu interaktif untuk
+ *              pengguna dalam 4 opsi:
+ *              1. Cari Rute    2. Tambah Halte    3. Hapus Halte    4. Keluar
+ *
+ * CARA KERJA :
+ *   - load_data() dipanggil di awal untuk mengisi data koridor dari file
+ *   - Loop while(1) menampilkan menu dan membaca input pengguna
+ *   - Berdasarkan pilihan, memanggil fungsi dari modul Connection:
+ *       * build_tree()  -> mencari & mencetak rute
+ *       * tambah_halte() -> menambah halte baru
+ *       * hapus_halte()  -> menghapus halte
+ *       * simpan_data()  -> menyimpan perubahan ke file
+ *
+ * MENERIMA   : Input dari keyboard pengguna (nama halte, pilihan menu)
+ * MENGEMBALIKAN : 0 (exit code sukses), mencetak output ke layar
+ * =========================================================================
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

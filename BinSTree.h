@@ -1,3 +1,26 @@
+/*
+ * =========================================================================
+ * MODUL      : BinSTree.h - Header Binary Search Tree (BST)
+ * =========================================================================
+ * FUNGSI     : Mendefinisikan struktur data TreeNode dan mendeklarasikan
+ *              fungsi-fungsi untuk memanipulasi Binary Search Tree.
+ *              Tree ini digunakan untuk menyimpan rute halte bus.
+ *
+ * CARA KERJA :
+ *   - Setiap TreeNode mewakili SATU halte dengan: id, name, jalur (flag)
+ *   - ID dihitung dari (koridor*100 + indeks_halte) agar unik
+ *   - Tree diorganisir sebagai BST: id < root -> kiri, id > root -> kanan
+ *   - Mendukung 3 traversal: preorder, inorder, postorder
+ *   - Dilengkapi serialisasi ke file (simpan_tree / muat_tree)
+ *
+ * BERISI     : Deklarasi fungsi (belum implementasi).
+ *              Implementasi ada di BinSTree.c
+ *
+ * DIPAKAI OLEH : connection.c (insert, insert_bentang, destroyTree, dll)
+ * MODUL INI INDEPENDEN : tidak bergantung pada modul lain (self-contained)
+ * =========================================================================
+ */
+
 #ifndef BINARYTREE_H
 #define BINARYTREE_H
 

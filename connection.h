@@ -1,3 +1,24 @@
+/*
+ * =========================================================================
+ * MODUL      : connection.h - Header Modul Koneksi & Manajemen Koridor
+ * =========================================================================
+ * FUNGSI     : Mendeklarasikan tipe data Corridor, variabel global, dan
+ *              fungsi-fungsi untuk mengelola data koridor bus.
+ *
+ * CARA KERJA :
+ *   - Mendefinisikan struct Corridor (nama, array dinamis halte, jumlah)
+ *   - Mendeklarasikan array global corridors[] sebagai wadah semua koridor
+ *   - Menyediakan interface untuk: load/save file, build tree rute,
+ *     CRUD halte, validasi data, dan pencarian rute
+ *
+ * BERISI     : Deklarasi fungsi (belum implementasi).
+ *              Implementasi ada di connection.c
+ *
+ * DIPAKAI OLEH : main.c (memanggil fungsi-fungsi yang dideklarasikan di sini)
+ * MEMAKAI      : BinSTree.h (menggunakan tipe TreeNode untuk tree rute)
+ * =========================================================================
+ */
+
 #ifndef CONNECTION_H
 #define CONNECTION_H
 

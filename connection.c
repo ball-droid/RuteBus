@@ -1,3 +1,40 @@
+/*
+ * =========================================================================
+ * MODUL      : connection.c - Implementasi Modul Koneksi & Manajemen Koridor
+ * =========================================================================
+ * FUNGSI     : Mengelola seluruh data koridor dan halte bus, mencakup:
+ *              - Load/save data dari/ke file (load_data, simpan_data)
+ *              - Mencari rute antar halte (build_tree, cetak_rute)
+ *              - CRUD halte (tambah_halte, hapus_halte)
+ *              - Validasi integritas data (validasi_data)
+ *              - Inisialisasi data default (init_bus_data)
+ *
+ * CARA KERJA :
+ *   - Data koridor disimpan di array global Corridor corridors[]
+ *   - Koridor[0] adalah KORIDOR UTAMA sebagai referensi transit
+ *   - Pencarian rute menggunakan 4 skenario:
+ *       a) Satu koridor       -> langsung
+ *       b) Asal di utama       -> transit ke cabang
+ *       c) Tujuan di utama     -> transit dari cabang
+ *       d) Beda cabang         -> transit 2x via koridor utama
+ *   - BST (dari BinSTree) digunakan untuk membangun tree rute
+ *   - Stack digunakan untuk backtrack dari tujuan ke asal
+ *
+ * MENERIMA   :
+ *   - Nama file dari main.c (load_data, simpan_data)
+ *   - Nama halte asal & tujuan dari main.c (build_tree)
+ *   - Nama halte + indeks koridor dari main.c (tambah_halte, hapus_halte)
+ *
+ * MENGEMBALIKAN :
+ *   - void (sebagian besar fungsi mencetak output langsung ke layar)
+ *   - int: 1=sukses, 0=gagal/duplikat, -1/-2=error (pada tambah/hapus_halte)
+ *   - Hasil pencarian melalui pointer parameter (find_stop, cari_iris)
+ *
+ * MEMAKAI    : BinSTree.h (TreeNode, insert, createNode, destroyTree)
+ * DIPAKAI OLEH : main.c
+ * =========================================================================
+ */
+
 #include <strings.h>
 #include "connection.h"
 #define FILE_TREE "data/tree.txt"

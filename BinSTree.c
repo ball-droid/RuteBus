@@ -1,3 +1,33 @@
+/*
+ * =========================================================================
+ * MODUL      : BinSTree.c - Implementasi Binary Search Tree (BST)
+ * =========================================================================
+ * FUNGSI     : Implementasi lengkap ADT Binary Search Tree untuk menyusun
+ *              rute halte bus dalam bentuk pohon biner.
+ *
+ * CARA KERJA :
+ *   - createNode : alokasi memori, isi id/name/jalur, child = NULL
+ *   - insert     : sisip node secara rekursif (id < root = kiri, > = kanan)
+ *   - insertLeft/insertRight : tempel child manual (bukan BST biasa)
+ *   - destroyTree: hapus seluruh tree (postorder) + free memori
+ *   - preorder/inorder/postorder : 3 jenis traversal pencetakan
+ *   - simpan_tree / muat_tree : serialisasi tree ke/dari file teks
+ *
+ * MENERIMA   : Dipanggil oleh connection.c dengan parameter:
+ *              - id (int), name (char[]), jalur (int) untuk create/insert
+ *              - root (TreeNode*) untuk operasi tree
+ *              - filename (const char*) untuk serialisasi
+ *
+ * MENGEMBALIKAN :
+ *   - TreeNode* (pointer ke node yang dibuat/ditemukan, atau root baru)
+ *   - void (untuk traversal, destroy, insertLeft/Right)
+ *   - int (height, isLeaf)
+ *
+ * DIPAKAI OLEH : connection.c (build_tree, insert_bentang, dll)
+ * MODUL INI INDEPENDEN : self-contained, hanya pakai stdlib/stdio/string
+ * =========================================================================
+ */
+
 #include "BinSTree.h"
 
 TreeNode* createNode(int id, char name[], int jalur)
